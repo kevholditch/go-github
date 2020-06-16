@@ -7,13 +7,34 @@ package github
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
 	"testing"
 )
+
+func TestComputeSignature(t *testing.T) {
+	b, _ := ioutil.ReadFile("test.pr")
+	token, _ := ioutil.ReadFile("token.txt")
+
+	m := genMAC(b, token, sha1.New)
+	s := hex.EncodeToString(m)
+
+	fmt.Print(fmt.Sprintf("\nsha1=%s\n", s))
+
+	err := ValidateSignature(fmt.Sprintf("sha1=%s", s), b, token)
+	if err != nil {
+		t.Fail()
+	}
+
+}
+
 
 func TestValidatePayload(t *testing.T) {
 	const defaultBody = `{"yo":true}` // All tests below use the default request body and signature.
